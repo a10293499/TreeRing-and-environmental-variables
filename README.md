@@ -4,7 +4,7 @@
     * 資料來源:<https://www.ncdc.noaa.gov/data-access/paleoclimatology-data>
     * 物種:*Pinus ponderosa* Douglas (western yellow pine)
     * 介紹:收集的樹輪資料均位於美國地區且為同一物種，但為四個不同作者(Brubaker, Dean, Graulich and Graybil)提供，樣木的位置也有落差
-    * ![樣木分布位置]()
+    * ![樣木分布位置](https://github.com/a10293499/TreeRing-and-environmental-variables/blob/main/%E6%A8%A3%E6%9C%A8%E5%88%86%E5%B8%83.PNG)
        * Red: Brubaker; green: Dean; blue: Graulich; purple: Graybil
     * 資料為每一年樹輪輪寬寬度(chronology data)及每一樣木分布位置及海拔(chronology env data)
  * 目標
@@ -19,4 +19,4 @@
     > -  PCA用來將3D降維成2D
     * Redundancy Analysis (RDA)
     > - 加入環境因子，以RDA進行分析
-    * [R code]()
+    * [R code](https://github.com/a10293499/TreeRing-and-environmental-variables/blob/main/Classification%20and%20Ordination%20analysis)
