@@ -1,0 +1,61 @@
+#read data
+all <- read.csv("allreverse.csv",header = T,row.names =1)
+env <- read.csv("chronology data.csv",header = T,row.names =1)
+library(vegan)
+
+#remove wa018
+#because wa018 is smaller than 100yr
+all <- all[-13,]
+env <- env[-13,]
+env <- env[,-c(6,7)]
+cls <- env[,2]
+#select overlapping year(remove NA)
+all.cutr <- all[,1282:1440]
+
+#Classification
+clust.allr <- hclust(d = dist(all.cutr, method = "euclidean"),method = 'ward.D')
+clust.allcutr <- cutree(clust.allr, k = 4)
+plot(clust.allr)
+rect.hclust (clust.allr, k = 4 ,border = c(1:4))
+
+#DCA
+DCA<-decorana(all.cutr)
+ordiplot(DCA,type ='n', display = 'sites') #smaller than 3 S.D--linear
+points (DCA, display = 'sites',col = cls, pch = clust.allcutr)
+
+#PCA
+pca <- rda(X = all.cutr)
+summary(pca)
+ordiplot(pca, type = 'n',xlim = c(-1.5,2))
+points(pca,pch = clust.allcutr,col = cls )
+#4 cluster: 4 different shape，4 sources: 4 colors
+legend("topright",c('C1','C2','C3','C4'),pch = c(1:4))
+
+#significant betwwent environmental variables and PCA
+ef <- envfit (pca ~  Latitude +Longitude + Elevation.m., data =env, perm = 999)
+ef
+ef.adj <- ef 
+pvals.adj <- p.adjust (ef$vectors$pvals, method = 'bonferroni')
+ef.adj$vectors$pvals <- pvals.adj
+ef.adj #three are significant
+plot(ef)
+
+#draw x=PC2 y=PC3
+pca2<- scores(pca,choices=2,display=c("sites")) #choices=1:only select the first columns 
+pca3<- scores(pca,choices=3,display=c("sites"))
+ordiplot(pca,choices = c(3,2), type = 'n')
+points(pca3,pca2,pch = clust.allcutr,col = cls )
+legend("topright",c('C1','C2','C3','C4'),pch = c(1:4))
+
+#adding environmental variables to do RDA
+rda <- rda (all.cutr ~ Latitude +Longitude + Elevation.m., data =env)
+summary(rda)
+plot(rda,display = c( "bp",'cn'),xlim = c(-3.5,2.5),ylim = c(-3,1.5))
+points(rda,pch = clust.allcutr,col = cls)
+legend("topright",c('C1','C2','C3','C4'),pch = c(1:4))
+
+#draw x=rda2 y=rda2
+rda2<- scores(rda,choices=2,display=c("sites")) #choices=1:only select the first columns 
+rda3<- scores(rda,choices=3,display=c("sites"))
+ordiplot(rda,choices = c(3,2), type = 'n')
+points(rda3,rda2,pch = clust.allcutr,col = clust.allcutr )
