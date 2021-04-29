@@ -27,3 +27,8 @@
    > - 從下圖可看出大致可分成四個分群，同個來源通常會被分到同一群內。值得注意的是C3與C4在圖1中看起來距離近，但在分群上卻是最遠的。
    * ![classification](https://github.com/a10293499/TreeRing-and-environmental-variables/blob/main/classification.PNG)
       * 圖2:群聚分析結果
+   * DCA & PCA
+   > - DCA第一象限小於3SD，因此選擇linear的方法-PCA。
+   > - PCA分析中，第一及第二主成分個別解釋了32.67%與9.47%
+   * ![PCA](https://github.com/a10293499/TreeRing-and-environmental-variables/blob/main/PCA.PNG)
+      * 圖3:PCA分析結果
