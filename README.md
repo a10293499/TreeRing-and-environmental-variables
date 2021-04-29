@@ -29,6 +29,13 @@
       * 圖2:群聚分析結果
    * DCA & PCA
    > - DCA第一象限小於3SD，因此選擇linear的方法-PCA。
-   > - PCA分析中，第一及第二主成分個別解釋了32.67%與9.47%
-   * ![PCA](https://github.com/a10293499/TreeRing-and-environmental-variables/blob/main/PCA.PNG)
-      * 圖3:PCA分析結果
+   > - PCA分析中，第一及第二主成分個別解釋了32.67%與9.47%。
+   > - 從圖3中可看出相同類群會較靠近，搭配圖1及圖2可發現，當樣木位置由北往南移動，PC1值增加;樣木位置由西往東移動，PC1值也增加(除C4)。另外C3的樣本分布在PC2中有極大的變化。
+   * ![PCA](https://github.com/a10293499/TreeRing-and-environmental-variables/blob/main/PCA.png)
+      * 圖3:PCA分析結果(Red: Brubaker; green: Dean; blue: Graulich; purple: Graybil)
+   * RDA
+   > - 加入的三個環境變量(海拔 經度 緯度)均為顯著(p <0.005)。
+   > - RDA分析中，第一及第二主成分個別解釋了21.72%與4.18%。
+   > - 結果於PCA相似，從圖4中也可看出相同類群會較靠近。C1和緯度為正相關;和海拔及經度呈現負相關。部分C3與海拔及經度呈現正相關;其他則和緯度為負相關。C4在RDA2軸上遠離其他群，且從圖中看起來與三個環境變量都沒有很相關。
+   * ![PCA](https://github.com/a10293499/TreeRing-and-environmental-variables/blob/main/RDA.png)
+      * 圖4:RDA分析結果(Red: Brubaker; green: Dean; blue: Graulich; purple: Graybil)
