@@ -32,7 +32,7 @@ points(pca,pch = clust.allcutr,col = cls )
 legend("topright",c('C1','C2','C3','C4'),pch = c(1:4))
 
 #significant betwwent environmental variables and PCA
-ef <- envfit (pca ~  Latitude +Longitude + Elevation.m., data =env, perm = 999)
+ef <- envfit (pca ~  Latitude +Longitude + Elevation, data =env, perm = 999)
 ef
 ef.adj <- ef 
 pvals.adj <- p.adjust (ef$vectors$pvals, method = 'bonferroni')
@@ -48,7 +48,7 @@ points(pca3,pca2,pch = clust.allcutr,col = cls )
 legend("topright",c('C1','C2','C3','C4'),pch = c(1:4))
 
 #adding environmental variables to do RDA
-rda <- rda (all.cutr ~ Latitude +Longitude + Elevation.m., data =env)
+rda <- rda (all.cutr ~ Latitude +Longitude + Elevation, data =env)
 summary(rda)
 plot(rda,display = c( "bp",'cn'),xlim = c(-3.5,2.5),ylim = c(-3,1.5))
 points(rda,pch = clust.allcutr,col = cls)
