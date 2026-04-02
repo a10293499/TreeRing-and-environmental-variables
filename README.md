@@ -3,10 +3,9 @@
 
 [![R-Version](https://img.shields.io/badge/R-4.2+-blue.svg)](https://www.r-project.org/)
 [![Quarto](https://img.shields.io/badge/Rendered%20with-Quarto-emerald)](https://quarto.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 專案簡介
-本專案探討美國西南部 **西黃松 (*Pinus ponderosa*)** 的樹輪寬度（Chronology）與地理環境因子之間的交互關係。透過一系列統計排序分析（Ordination），量化緯度、經度與海拔對長期生長趨勢的解釋力 。
+本專案探討美國西南部 **Pinus ponderosa** 的樹輪寬度（Chronology）與地理環境因子之間的交互關係。透過一系列統計排序分析（Ordination），量化緯度、經度與海拔對長期生長趨勢的解釋力 。
 
 ### 研究目標
 * **空間異質性分析**：探討不同來源區的樹輪樣本是否能單純藉由生長規律進行區分 。
@@ -15,7 +14,7 @@
 ---
 
 ## 資料說明
-* ]**資料來源**：[NOAA Paleoclimatology Data](https://www.ncdc.noaa.gov/data-access/paleoclimatology-data) 。
+* **資料來源**：[NOAA Paleoclimatology Data](https://www.ncdc.noaa.gov/data-access/paleoclimatology-data) 。
 * **研究物種**：*Pinus ponderosa* Douglas (Western yellow pine) 。
 * **樣區範圍**：包含 72 個樣區，分布於美國西南部（包含 Brubaker, Dean, Graulich, Graybil 等作者提供之資料） 。
 * **資料處理**：排除生長年份小於 100 年的樣本，並篩選重疊年份區間以確保分析一致性。
