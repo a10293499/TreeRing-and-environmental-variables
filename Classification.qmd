@@ -1,0 +1,343 @@
+---
+title: "美國西南部樹輪生長與環境因子之排序分析 Dendrochronology Ordination Analysis: Environmental Drivers of Pinus ponderosa in Southwestern USA"
+subtitle: "Data analysis in R (Cluster analysis/ PCA/ DCA/ RDA)"
+format: 
+  html:
+    embed-resources: true  
+    toc: true              
+    toc-title: "分析目錄"
+    code-fold: true
+    encoding: "UTF-8"
+execute:
+  warning: false
+  message: false
+---
+
+## 資料
+
+-   資料來源:<https://www.ncdc.noaa.gov/data-access/paleoclimatology-data>
+
+-   物種:*Pinus ponderosa* Douglas (western yellow pine)
+
+-   介紹:收集的樹輪資料均位於美國地區且為同一物種，但為四個不同作者(Brubaker, Dean, Graulich and Graybil)提供，樣木的位置也有落差
+
+-   資料為每一年[樹輪輪寬寬度](https://github.com/a10293499/TreeRing-and-environmental-variables/blob/main/chronology%20data.csv)(chronology data)及[每一樣木分布位置及海拔](https://github.com/a10293499/TreeRing-and-environmental-variables/blob/main/chronology%20env%20data.csv)(chronology env data)
+
+## 目標
+
+-   由於樹木生長受環境很大影響，通常溫度較溫暖雨量較多，可生長較快造成輪寬較寬；反之，輪寬則會較窄。Danek et.al (2017) 藉由排序分析發現Carpathian山脈的樹木年輪樹輪與經度和海之間有相關性，樹輪會隨著經度和海拔的變動而變化。 因此，我想知道在其他地區是否仍然有這樣的關係。此外，他們在分析中沒有添加環境變量，在本研究中也會加入環境因子進行分析。
+
+## 方法說明
+
+-   Classification
+
+    <div>
+
+    > 以hierarchical agglomerative clustering (Ward’s method)進行分析，k值設定為4，因為資料來自大致來自於4個不同的地方(部分重疊)，能否單純藉由輪寬將四個來源區分開來。
+
+    </div>
+
+-   Detrended Correspondence Analysis(DCA) and Principle Component Analysis(PCA)
+
+    <div>
+
+    > -   用DCA決定是linear 或 unimoda，假如第一象限的DCA小於3D則使用linear。
+    >
+    > -   PCA用來將3D降維成2D。
+
+    </div>
+
+-   Redundancy Analysis (RDA)
+
+    <div>
+
+    > 加入環境因子，以RDA進行分析。
+
+    </div>
+
+## 結果(含R code)
+
+```{r}
+#| label: setup
+#| include: false
+
+#library
+library(vegan)
+library(dplyr)
+library(knitr)
+library(skimr)
+library(dendextend)
+library(leaflet)
+library(RColorBrewer)
+
+#read data
+setwd('D:/R/Classification')
+all <- read.csv("chronology data.csv",header = T,row.names =1)
+env <- read.csv("chronology env data.csv",header = T,row.names =1)
+summary(all)
+str(env)
+```
+
+## 資料處理
+
+排除生長年份過短（小於 100 年）的樣本，並篩選重疊年份區間以確保分析的一致性。
+
+```{r}
+#| echo: false
+#remove wa018
+#because wa018 is smaller than 100yr
+all <- all[-13,]
+env <- env[-13,]
+env <- env[,-c(6,7)]
+cls <- env[,2]
+#select overlapping year(remove NA)
+all.cutr <- all[,1282:1440]
+
+# 檢查清理後的資料結構
+skim(env)
+```
+
+## 樣木分布
+
+-   樣木分布位置如下圖所示
+
+-   **Red(1)**: Brubaker; **Blue(2)**: Graulich; **Green(3)**: Dean; **Purple(4**): Graybil)
+
+```{r}
+#| label: map-visualization
+#| message: false
+#| warning: false
+
+# 1. 定義顏色：根據 region_classification (env[, 2]) 自動生成色板
+# 假設 region_classification 是類別型變數
+color_pal <- colorFactor(palette = "Set1", domain = env$region_classification)
+
+# 2. 建立互動式地圖
+leaflet(env) %>%
+  addTiles() %>%  # 使用預設的 OpenStreetMap 底圖
+  addCircleMarkers(
+    lng = ~Longitude, 
+    lat = ~Latitude, 
+    color = ~color_pal(region_classification), # 外框顏色
+    fillColor = ~color_pal(region_classification), # 填充顏色
+    fillOpacity = 0.7, 
+    radius = 8, 
+    stroke = TRUE,
+    weight = 1,
+    # 滑鼠點擊時顯示的內容：樣區名稱與分類
+    popup = ~paste0("樣區: ", rownames(env), "<br>",
+                    "區域分類: ", region_classification, "<br>",
+                    "海拔: ", Elevation, " m")
+  ) %>%
+  # 加入圖例
+  addLegend(
+    pal = color_pal, 
+    values = ~region_classification, 
+    title = "區域分類",
+    position = "bottomright"
+  )
+```
+
+## 群聚分析 (Hierarchical Clustering)
+
+使用歐基里德距離（Euclidean Distance）與 Ward's Method 進行分群，由於想確認單就樹輪寬度資料能否區分4個來源，因此在設定上將樣區歸類為 4 個主要群聚(C1\~C4)。
+
+```{r}
+#| label: clustering
+#| message: false
+#| warning: false
+
+
+# 1. 建立樹狀圖
+dend <- as.dendrogram(hclust(d = dist(all.cutr, method = "euclidean"), method = 'ward.D'))
+
+# 2. 設定下方文字顏色 (原本地理來源的分群)
+dend <- set(dend, "labels_cex", 0.6)
+# map_colors 對應 region_classification 的紅藍綠紫
+map_colors <- c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3") 
+#map_colors <- c(unique(env[,2]))
+region_idx <- as.numeric(as.factor(cls))
+labels_colors(dend) <- map_colors[region_idx][order.dendrogram(dend)]
+
+# 3. 繪製圖表
+par(mar = c(8, 4, 4, 2)) 
+plot(dend, main = "樹輪樣區層級群聚圖")
+
+# 4. 畫出分群框框：改為深灰色 (gray40)，避免與下方紅藍綠紫混淆
+rect.dendrogram(dend, k = 4, border = 'gray40', lty = 2, lwd = 2)
+
+# 5. 在框框上方標註 C1~C4：統一使用深灰色，並精確調整位置
+# 根據妳目前的圖：左到右分別是 C3, C1, C2, C4
+# 微調後的 x 座標：
+text(x = c(15, 40, 58, 68), 
+     y = 22, 
+     labels = c("C3", "C1", "C2", "C4"), 
+     cex = 1.3, 
+     font = 2, 
+     col = c('#6FD45E','gray10','#E41A1C','#377EB8'))
+```
+
+::: callout-note
+-   從層級群聚圖可看出大致分成四個分群(C1\~C4)，同個來源大多會被分到同一群內。
+
+-   值得注意的是C3與C4兩個分群在群聚分析中是最遠的，但這兩群分別為 **Blue(2)**: Graulich 跟 **Purple(4**): Graybil)，在樣區位置上反而是比較近的，推測這兩區的樣本受其他環境因子影響(非經緯度)的可能性較大。
+:::
+
+## 排序法分析 (Ordination)
+
+```{r}
+#| label: dca-check
+#| message: false
+
+clust.allr <- hclust(d = dist(all.cutr, method = "euclidean"), method = 'ward.D')
+clust.allcutr <- cutree(clust.allr, k = 4)
+
+# 1. 執行 DCA
+dca_result <- decorana(all.cutr)
+
+# 2. 查看 DCA 結果
+dca_result
+#ordiplot(dca_result,type ='n', display = 'sites') #smaller than 3 S.D--linear
+#points (dca_result, display = 'sites',col = cls)
+
+```
+
+::: {.callout-note}
+
+### **DCA 分析** 
+
+經由去趨勢對應分析 (DCA) 檢測，第一軸梯度長度 (Axis length) 為 0.698，遠小於 3 S.D. 的閾值。這證實了樣區間的樹輪特徵呈現線性反應，因此採用主成分分析 (PCA) 作為後續排序分析之模型。
+
+:::
+
+```{r}
+#| label: pca-analysis
+#| message: false
+
+# 確保 pca 已經建立
+pca <- rda(X = all.cutr)
+
+summ_pca <- summary(pca)
+summ_pca$cont$importance[, 1:5]
+# 繪圖
+ordiplot(pca, type = 'n', xlim = c(-1.5, 2), main = "PCA 樣區分布圖")
+points(pca, pch = cls, col = clust.allcutr)
+legend("topright", legend = c('1','2','3','4'), pch = 1:4)
+```
+
+::: {.callout-note}
+
+### **PCA 分析** 
+
+-   PC1 (32.7%)：第一主成分解釋了資料中約三分之一的變異，通常代表最強大的環境梯度。 PC2 (9.5%)：第二主成分的解釋力較弱，代表次要的環境因子。
+
+-    前兩軸累計 (42.1%)：兩軸可以呈現原始資料中 42.1% 的特徵資訊。
+
+<!-- -->
+
+-   相同符號表示樣本為同個來源；相同顏色表示經過群聚分析後歸類為同一群(C1\~C4)，歸類到同群的，在PC1上較為接近。
+
+-   從上圖中一樣可看出相同來源會較靠近，搭配地理位置圖可發現，當樣木位置由北往南(1○↛ 3+ ↛ 4 X ↛ 2 三角 ↛ 4 X )移動，PC1值增加；樣木位置由西往東移動( 3+ ↛ 4 X ↛ 2 三角 ↛ 4 X )，PC1值也增加。搭配解釋率，表示PC1可能受樣本經緯度影響大。
+
+-   X 4在PC2軸中有極大的變化。
+
+:::
+
+**環境因子擬合 (Environmental Fitting)**
+
+將經度、緯度與海拔擬合至 PCA 結果中，並執行 Bonferroni 校正確保顯著性。
+
+```{r}
+#| label: env-fit
+ef <- envfit(pca ~ Latitude + Longitude + Elevation, data = env, perm = 999)
+
+# P-value 校正
+ef.adj <- ef
+pvals.adj <- p.adjust(ef$vectors$pvals, method = 'bonferroni')
+ef.adj$vectors$pvals <- pvals.adj
+
+#解釋率r2
+ef.adj$vectors$r
+
+print(ef.adj)
+
+
+plot(pca, type = "n", main = "環境因子與 PCA 擬合圖")
+points(pca, pch = cls, col = clust.allcutr)
+legend("topright", legend = c('1','2','3','4'), pch = 1:4)
+plot(ef.adj)
+```
+
+::: callout-tip
+### 解釋率
+
+本研究中
+
+緯度的解釋率 $r^2$ 為 `r round(ef.adj$vectors$r[1], 3)`
+
+經度的解釋率$r^2$為 `r round(ef.adj$vectors$r[2], 3)`
+
+海拔的解釋率 $r^2$ 為 `r round(ef.adj$vectors$r[3], 3)`
+
+三個因子的解釋率為個別計算，因子間會有共線性，表示它們共享了一部分對樹輪的解釋力。
+:::
+
+::: {.callout-note}
+
+-   從解釋率$r^2$來看，緯度對本次樹輪資料集解釋率最大，其次為海拔，經度的影響最小。
+
+-   從上表與上圖中都顯示這三個環境因子與橫軸PC1(解釋率32.7%)有強烈相關性：緯度與PC1為負相關；經度與海拔則和PC1呈現正相關。而這三個因子雖然也會影響PC2的佔比不高(大約30%上下)，因此這個資料在PC2上的變易更可能來於非地理性因素，然而此部分需更進一步有相關資料去分析研究。
+
+-   圖中的樣木和這三個地理因子的解讀上，**愈往左的樣區，緯度越高(1跟3)；愈往右的樣區，經度(西半球負值)和海拔越高(2跟4)。**
+
+:::
+
+## 冗餘分析 (Redundancy analysis, RDA)
+
+環境因子擬合分析主要是在看環境與現有資料的相關性，是在PCA區分好後才塞入環境因子。然而，RDA是在計算時就規定好座標軸，因此能看出**「如果只考慮這些環境因子(緯度/經度/海拔)，樹輪的生長特徵能被解釋到什麼程度？」**
+
+```{r}
+#| label: rda-analysis
+#| message: false
+#| warning: false
+
+# 1. 執行 RDA 
+rda_model <- rda(all.cutr ~ Latitude + Longitude + Elevation, data = env)
+summ_rda <- summary(rda_model)
+summ_rda$cont$importance[, 1:3]
+
+# 2. 提取解釋率 
+rda_stat <- RsquareAdj(rda_model)
+adj_r2 <- rda_stat$adj.r.squared
+
+# 3. 繪圖初始化
+plot(rda_model, type = "n", 
+     main = paste0("樹輪與環境因子之 RDA 分析 (Adj R2 = ", round(adj_r2, 3), ")"),
+     xlim = c(-3, 3), ylim = c(-3, 1))
+
+# 4. 點位
+points(rda_model, display = "sites", 
+       pch = cls, 
+       col =clust.allcutr, 
+       cex = 1.1)
+
+# 5. 環境因子
+text(rda_model, display = "bp", col = "blue", cex = 1.1, font = 2)
+
+# 6. 圖例 
+legend("topright", 
+       legend = c('1', '2', '3', '4'), 
+       pch = 1:4)
+```
+
+::: {.callout-note}
+
+-   RDA分析中，第一軸(RDA1)及第二軸(RDA2)個別解釋了21.72%與4.18%，前兩軸 (RDA1+RDA2) 合計解釋了 25.9%，考慮到自由度校正後，這組環境模型對整體資料的「淨貢獻度」是 23.6%。
+
+-   RDA1 (21.7%) 與PC1相似，主要捕捉了由「緯度」與「海拔/經度」對立所構成的西北-東南向梯度。像是黑色點 (C3/1)：緊跟著 Latitude，代表這些北方的樣區生長節奏較受緯度主導；綠色點 (C2)分布在 Elevation 箭頭附近，則顯示海拔較可能是驅動這群樣區生長的主因。
+
+-   RDA2 (4.2%) 則進一步區分了受「經度」主導的樣區，如圖中下方C4藍色X(靠近Denver)可能受經度影響更大導致在層級群聚圖上自成一格。
+
+-   結果證實，本次樣區的樹輪生長的空間異質性並非由單一因子決定，而是經緯度與垂直高度共同約束下的產物。
+
+:::
