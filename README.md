@@ -5,7 +5,7 @@
 [![Quarto](https://img.shields.io/badge/Rendered%20with-Quarto-emerald)](https://quarto.org/)
 
 ## 線上瀏覽報告
- [點此查看完整分析網頁](https://a10293499.github.io/DecisioninR/)
+ [點此查看完整分析網頁](https://a10293499.github.io/TreeRing-and-environmental-variables/)
 
 ## 專案簡介
 本專案探討美國西南部 **Pinus ponderosa** 的樹輪寬度（Chronology）與地理環境因子之間的交互關係。透過一系列統計排序分析（Ordination），量化緯度、經度與海拔對長期生長趨勢的解釋力 。
